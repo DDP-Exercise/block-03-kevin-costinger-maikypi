@@ -39,14 +39,82 @@
  *     the scope of his variables and of course, makes use of
  *     event delegation, to keep his event listeners tidied up!
  *
- *     You - 2026-03-25
+ *     maikypi - 2026-03-29
  *******************************************************/
+
 let sumExpenses = 0; //Use this variable to keep the sum up to date.
 
-function submitForm(e){
-    //TODO: Prevent the default behavior of the submit button.
-    //TODO: Validate the form. If everything is fine, add the expense to the tracker and reset the form.
+const form = document.querySelector("form");
+const dateInput = document.getElementById("date");
+const amountInput = document.getElementById("amount");
+const expenseInput = document.getElementById("expense");
+const expensesTableBody = document.querySelector("#expenses tbody");
+const expenseSum = document.getElementById("expenseSum");
+
+/* Zeigt die Summe im HTML an */
+function updateExpenseSum() {
+    expenseSum.textContent = formatEuro(sumExpenses);
 }
+
+/*erstellt eine neue Tabellenzeile*/
+function addExpenseRow(date, amount, expense) {
+    const row = document.createElement("tr");
+    /*füllt die Zeile mit Inhalt: Datum, Betrag (formatiert), Text, Delete-Button */
+    row.innerHTML = `
+        <td>${date}</td>
+        <td>${formatEuro(amount)}</td>
+        <td>${expense}</td>
+        <td><button type="button" class="deleteBtn" data-amount="${amount}">Delete</button></td>
+    `;
+    /* data-amount = hier speichern wir den betrag */
+    expensesTableBody.appendChild(row); /*fügt die Zeile zur Tabelle hinzu*/
+}
+//TODO: Prevent the default behavior of the submit button.
+//TODO: Validate the form. If everything is fine, add the expense to the tracker and reset the form.
+
+function submitForm(e){
+    /*submitForm = Seite lädt neu wird verhindert */
+    e.preventDefault();
+
+    const dateValue = dateInput.value;
+    const amountValue = parseFloat(amountInput.value);
+    const expenseValue = expenseInput.value.trim();
+
+    if (isEmpty(dateValue)) {
+        dateInput.focus();
+        return;
+    }
+
+    if (isNaN(amountValue) || amountValue < 0.01) {
+        amountInput.focus();
+        return;
+    }
+
+    if (expenseValue.length < 3) {
+        expenseInput.focus();
+        return;
+    }
+
+    addExpenseRow(dateValue, amountValue, expenseValue);
+
+    sumExpenses += amountValue;
+    updateExpenseSum();
+
+    form.reset();
+    dateInput.focus();
+}
+
+form.addEventListener("submit", submitForm); /* = wenn man auf submit drückt, wird submitForm ausgeführt */
+expensesTableBody.addEventListener("click", function(e) {
+    if (e.target.classList.contains("deleteBtn")) { /* wurde ein delete button gedrückt? */
+        const amount = parseFloat(e.target.dataset.amount);
+        sumExpenses -= amount;
+        updateExpenseSum();
+        /*Betrag holen, Summe verringern, Zeile löschen*/
+
+        e.target.closest("tr").remove();
+    }
+});
 
 
 /*****************************
